@@ -1,0 +1,109 @@
+[gd_scene load_steps=12 format=3 uid="uid://c70x02secqvnn"]
+
+[ext_resource type="Script" uid="uid://dgvxhmqkkhahq" path="res://UI/menu.gd" id="1_qmqfe"]
+[ext_resource type="Texture2D" uid="uid://dfuccucvbo681" path="res://Assets/Images/Pawn_Queen_Minimalist.jpg" id="2_e05sn"]
+[ext_resource type="FontFile" uid="uid://bvkygw5xhiiq3" path="res://Assets/Fonts/CormorantGaramond-VariableFont_wght.ttf" id="3_kfjwn"]
+[ext_resource type="Texture2D" uid="uid://cne4jnjoip73m" path="res://Assets/Images/Solo_Game_Icon.png" id="4_dte3n"]
+[ext_resource type="AudioStream" uid="uid://6k7sck0xwutc" path="res://Assets/SFX/Music/Classicals.de - Debussy - Arabesque No. 1, L. 66 - Arranged for Music Box.mp3" id="5_e05sn"]
+[ext_resource type="AudioStream" uid="uid://b7562cw2vxsno" path="res://Assets/SFX/Music/Classicals.de - Satie - Gymnopedie No. 1 - Arranged for Music Box.mp3" id="6_kfjwn"]
+[ext_resource type="AudioStream" uid="uid://c4oiw6wgoflth" path="res://Assets/SFX/castling_move.wav" id="7_dte3n"]
+[ext_resource type="Texture2D" uid="uid://csyycrjt013cs" path="res://Assets/Images/Yellow_Autumn_Leaf_PNG_Clip_Art-2119.png" id="8_dhncy"]
+
+[sub_resource type="Curve" id="Curve_cvc1e"]
+_data = [Vector2(0, 0.13410306), 0.0, 0.0, 0, 0, Vector2(0.4685315, 0.26110125), -2.4764652, -2.4764652, 0, 0, Vector2(0.66899765, 0.2033748), 2.3166945, 2.3166945, 0, 0, Vector2(1, 0.3361457), -0.063499175, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_re817"]
+curve = SubResource("Curve_cvc1e")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_cvc1e"]
+particle_flag_disable_z = true
+particle_flag_damping_as_friction = true
+emission_shape_scale = Vector3(600, 200, 1)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+direction = Vector3(5, 5, 0)
+spread = 137.555
+initial_velocity_max = 61.609997
+angular_velocity_min = -90.74001
+angular_velocity_max = 5.259984
+gravity = Vector3(40, -10.8, 0)
+attractor_interaction_enabled = false
+scale_min = 0.01
+scale_max = 0.01
+scale_curve = SubResource("CurveTexture_re817")
+hue_variation_min = 0.28999996
+hue_variation_max = 0.28999996
+turbulence_noise_speed = Vector3(4, 0, 0)
+
+[node name="Menu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_qmqfe")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+texture_repeat = 1
+position = Vector2(577.00006, 323.00003)
+scale = Vector2(1.7965571, 1.788889)
+texture = ExtResource("2_e05sn")
+flip_h = true
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+position = Vector2(200, 350)
+amount = 20
+texture = ExtResource("8_dhncy")
+lifetime = 8.98
+draw_order = 2
+process_material = SubResource("ParticleProcessMaterial_cvc1e")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 406.0
+offset_right = 1151.0
+offset_bottom = 161.0
+theme_override_colors/font_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
+theme_override_colors/font_shadow_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
+theme_override_fonts/font = ExtResource("3_kfjwn")
+theme_override_font_sizes/font_size = 60
+text = "A Game of Shadows"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 704.0
+offset_top = 239.0
+offset_right = 1151.0
+offset_bottom = 643.0
+
+[node name="NewGameBtn" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_kfjwn")
+theme_override_font_sizes/font_size = 30
+action_mode = 0
+text = "New Game"
+icon = ExtResource("4_dte3n")
+flat = true
+alignment = 0
+expand_icon = true
+
+[node name="MenuMusic" type="Node2D" parent="."]
+
+[node name="Debussy" type="AudioStreamPlayer2D" parent="MenuMusic"]
+stream = ExtResource("5_e05sn")
+parameters/looping = true
+
+[node name="Satie" type="AudioStreamPlayer2D" parent="MenuMusic"]
+stream = ExtResource("6_kfjwn")
+parameters/looping = true
+
+[node name="Click" type="AudioStreamPlayer2D" parent="MenuMusic"]
+stream = ExtResource("7_dte3n")
+
+[connection signal="pressed" from="VBoxContainer/NewGameBtn" to="." method="_on_new_game_btn_pressed"]

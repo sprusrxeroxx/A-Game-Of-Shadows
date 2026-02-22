@@ -1,0 +1,47 @@
+[gd_scene load_steps=17 format=4 uid="uid://bobn8eo1simqb"]
+
+[ext_resource type="TileSet" uid="uid://bitxqcv4gpsyr" path="res://Tiles/chess_tile_set.tres" id="1_6dqwo"]
+[ext_resource type="Script" uid="uid://dysorl64kdoep" path="res://Board/board.gd" id="1_glpmc"]
+[ext_resource type="PackedScene" uid="uid://bpckshmbu1puc" path="res://Pieces/piece.tscn" id="2_ghvr1"]
+[ext_resource type="Texture2D" uid="uid://l4lcu0af61px" path="res://Assets/chess_piesces/white_king.png" id="3_5ybqi"]
+[ext_resource type="Texture2D" uid="uid://bmm3ou44yp16r" path="res://Assets/chess_piesces/white_queen.png" id="4_1cpk3"]
+[ext_resource type="Texture2D" uid="uid://cooemekcaieuf" path="res://Assets/chess_piesces/white-bishop.png" id="5_mjeqw"]
+[ext_resource type="Texture2D" uid="uid://cg5pqj0wcniym" path="res://Assets/chess_piesces/white_knight.png" id="6_7oini"]
+[ext_resource type="Texture2D" uid="uid://b4t1km0agmpq5" path="res://Assets/chess_piesces/white_rook.png" id="7_0fkod"]
+[ext_resource type="Texture2D" uid="uid://cqhew1d4a4tsi" path="res://Assets/chess_piesces/white_pawn.png" id="8_y4q0p"]
+[ext_resource type="Texture2D" uid="uid://cqkykwojsy1rv" path="res://Assets/chess_piesces/black_king.png" id="9_6dage"]
+[ext_resource type="Texture2D" uid="uid://dilnsq40ypj6q" path="res://Assets/chess_piesces/black_queen.png" id="10_jn6xd"]
+[ext_resource type="Texture2D" uid="uid://dexcmfp1y1q5l" path="res://Assets/chess_piesces/black_bishop.png" id="11_aaue3"]
+[ext_resource type="Texture2D" uid="uid://bjug501c626oo" path="res://Assets/chess_piesces/black_knight.png" id="12_e123n"]
+[ext_resource type="Texture2D" uid="uid://2fhll1wwbmsy" path="res://Assets/chess_piesces/black_rook.png" id="13_4kang"]
+[ext_resource type="Texture2D" uid="uid://bact7pgrp8fhn" path="res://Assets/chess_piesces/black_pawn.png" id="14_7hvnj"]
+[ext_resource type="PackedScene" uid="uid://oe6p5x5r30lm" path="res://UI/turn_light.tscn" id="16_1cpk3"]
+
+[node name="Board" type="Node2D"]
+texture_filter = 1
+texture_repeat = 2
+script = ExtResource("1_glpmc")
+piece_scene = ExtResource("2_ghvr1")
+tex_white_king = ExtResource("3_5ybqi")
+tex_white_queen = ExtResource("4_1cpk3")
+tex_white_bishop = ExtResource("5_mjeqw")
+tex_white_knight = ExtResource("6_7oini")
+tex_white_rook = ExtResource("7_0fkod")
+tex_white_pawn = ExtResource("8_y4q0p")
+tex_black_king = ExtResource("9_6dage")
+tex_black_queen = ExtResource("10_jn6xd")
+tex_black_bishop = ExtResource("11_aaue3")
+tex_black_knight = ExtResource("12_e123n")
+tex_black_rook = ExtResource("13_4kang")
+tex_black_pawn = ExtResource("14_7hvnj")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAIAAAAAAAIAAAAAAAMAAAAAAAMAAAAAAAQAAAAAAAQAAAAAAAUAAAAAAAUAAAAAAAYAAAAAAAYAAAAAAAcAAAAAAAcAAAABAAAAAAABAAAAAAABAAEAAAABAAEAAAABAAIAAAABAAIAAAABAAMAAAABAAMAAAABAAQAAAABAAQAAAABAAUAAAABAAUAAAABAAYAAAABAAYAAAABAAcAAAABAAcAAAACAAAAAAACAAAAAAACAAEAAAACAAEAAAACAAIAAAACAAIAAAACAAMAAAACAAMAAAACAAQAAAACAAQAAAACAAUAAAACAAUAAAACAAYAAAACAAYAAAACAAcAAAACAAcAAAADAAAAAAADAAAAAAADAAEAAAADAAEAAAADAAIAAAADAAIAAAADAAMAAAADAAMAAAADAAQAAAADAAQAAAADAAUAAAADAAUAAAADAAYAAAADAAYAAAADAAcAAAADAAcAAAAEAAAAAAAEAAAAAAAEAAEAAAAEAAEAAAAEAAIAAAAEAAIAAAAEAAMAAAAEAAMAAAAEAAQAAAAEAAQAAAAEAAUAAAAEAAUAAAAEAAYAAAAEAAYAAAAEAAcAAAAEAAcAAAAFAAAAAAAFAAAAAAAFAAEAAAAFAAEAAAAFAAIAAAAFAAIAAAAFAAMAAAAFAAMAAAAFAAQAAAAFAAQAAAAFAAUAAAAFAAUAAAAFAAYAAAAFAAYAAAAFAAcAAAAFAAcAAAAGAAAAAAAGAAAAAAAGAAEAAAAGAAEAAAAGAAIAAAAGAAIAAAAGAAMAAAAGAAMAAAAGAAQAAAAGAAQAAAAGAAUAAAAGAAUAAAAGAAYAAAAGAAYAAAAGAAcAAAAGAAcAAAAHAAAAAAAHAAAAAAAHAAEAAAAHAAEAAAAHAAIAAAAHAAIAAAAHAAMAAAAHAAMAAAAHAAQAAAAHAAQAAAAHAAUAAAAHAAUAAAAHAAYAAAAHAAYAAAAHAAcAAAAHAAcAAAA=")
+tile_set = ExtResource("1_6dqwo")
+
+[node name="Highlights" type="Node2D" parent="."]
+
+[node name="Pieces" type="Node2D" parent="."]
+
+[node name="TurnLight" parent="." instance=ExtResource("16_1cpk3")]
+position = Vector2(597, 5)

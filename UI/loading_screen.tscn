@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3 uid="uid://y12p2iucnxwo"]
+
+[ext_resource type="Script" uid="uid://bebipnpl2asi6" path="res://UI/loading_screen.gd" id="1_1j043"]
+
+[sub_resource type="Animation" id="Animation_pnnle"]
+resource_name = "fade_out"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 0.14358747),
+"update": 1,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="Animation" id="Animation_vvjaa"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_vqi5s"]
+_data = {
+&"RESET": SubResource("Animation_vvjaa"),
+&"fade_out": SubResource("Animation_pnnle")
+}
+
+[node name="loading_screen" type="CanvasLayer"]
+script = ExtResource("1_1j043")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+color = Color(0.10980392, 0.105882354, 0.12156863, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../ColorRect")
+libraries = {
+&"": SubResource("AnimationLibrary_vqi5s")
+}

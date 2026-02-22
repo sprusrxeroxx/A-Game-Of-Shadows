@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpckshmbu1puc"]
+
+[ext_resource type="Script" uid="uid://b4khw7ovcccsq" path="res://Pieces/piece.gd" id="1_2uo6i"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ig5x7"]
+width = 50
+height = 50
+
+[node name="Piece" type="Node2D"]
+script = ExtResource("1_2uo6i")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("NoiseTexture2D_ig5x7")
+
+[node name="Lb1" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://oe6p5x5r30lm"]
+
+[ext_resource type="Script" uid="uid://chjp10reoclay" path="res://UI/turn_light.gd" id="1_kjj8o"]
+[ext_resource type="FontFile" uid="uid://bvkygw5xhiiq3" path="res://Assets/Fonts/CormorantGaramond-VariableFont_wght.ttf" id="2_nm0h0"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kjj8o"]
+font = ExtResource("2_nm0h0")
+font_size = 50
+outline_color = Color(0, 0, 0, 1)
+
+[node name="TurnLight" type="Node2D"]
+script = ExtResource("1_kjj8o")
+
+[node name="Label" type="Label" parent="."]
+z_index = 1
+offset_left = 109.0
+offset_top = 256.0
+offset_right = 455.0
+offset_bottom = 325.0
+label_settings = SubResource("LabelSettings_kjj8o")
+uppercase = true
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 555.0
+offset_bottom = 644.0
