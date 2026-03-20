@@ -1,21 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://y12p2iucnxwo"]
 
-[ext_resource type="Script" uid="uid://bebipnpl2asi6" path="res://UI/loading_screen.gd" id="1_1j043"]
-
-[sub_resource type="Animation" id="Animation_pnnle"]
-resource_name = "fade_out"
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:modulate:a")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 1),
-"transitions": PackedFloat32Array(1, 0.14358747),
-"update": 1,
-"values": [0.0, 1.0]
-}
+[sub_resource type="GDScript" id="GDScript_8rmg3"]
+script/source = "extends CanvasLayer
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
+	
+func change_scene(target_scene: String):
+	animation_player.play(\"fade_out\")
+	await animation_player.animation_finished
+	get_tree().change_scene_to_file(target_scene)
+	animation_player.play_backwards(\"fade_out\")
+"
 
 [sub_resource type="Animation" id="Animation_vvjaa"]
 length = 0.001
@@ -32,6 +26,21 @@ tracks/0/keys = {
 "values": [1.0]
 }
 
+[sub_resource type="Animation" id="Animation_pnnle"]
+resource_name = "fade_out"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 0.14358747),
+"update": 1,
+"values": [0.0, 1.0]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_vqi5s"]
 _data = {
 &"RESET": SubResource("Animation_vvjaa"),
@@ -39,7 +48,7 @@ _data = {
 }
 
 [node name="loading_screen" type="CanvasLayer"]
-script = ExtResource("1_1j043")
+script = SubResource("GDScript_8rmg3")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 offset_right = 1152.0

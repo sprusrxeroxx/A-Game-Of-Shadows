@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3 uid="uid://c70x02secqvnn"]
 
-[ext_resource type="Script" uid="uid://dgvxhmqkkhahq" path="res://UI/menu.gd" id="1_qmqfe"]
+[ext_resource type="Script" uid="uid://dgvxhmqkkhahq" path="res://UI/scripts/menu.gd" id="1_qmqfe"]
 [ext_resource type="Texture2D" uid="uid://dfuccucvbo681" path="res://Assets/Images/Pawn_Queen_Minimalist.jpg" id="2_e05sn"]
 [ext_resource type="FontFile" uid="uid://bvkygw5xhiiq3" path="res://Assets/Fonts/CormorantGaramond-VariableFont_wght.ttf" id="3_kfjwn"]
 [ext_resource type="Texture2D" uid="uid://cne4jnjoip73m" path="res://Assets/Images/Solo_Game_Icon.png" id="4_dte3n"]
@@ -87,7 +87,7 @@ theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_kfjwn")
 theme_override_font_sizes/font_size = 30
 action_mode = 0
-text = "New Game"
+text = "Single Player"
 icon = ExtResource("4_dte3n")
 flat = true
 alignment = 0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=4 uid="uid://bobn8eo1simqb"]
+[gd_scene load_steps=24 format=4 uid="uid://bobn8eo1simqb"]
 
 [ext_resource type="TileSet" uid="uid://bitxqcv4gpsyr" path="res://Tiles/chess_tile_set.tres" id="1_6dqwo"]
 [ext_resource type="Script" uid="uid://dysorl64kdoep" path="res://Board/board.gd" id="1_glpmc"]
@@ -21,8 +21,13 @@
 [ext_resource type="AudioStream" uid="uid://c06wbb4alvxmy" path="res://Assets/SFX/new_error_move_.wav" id="19_y4q0p"]
 [ext_resource type="AudioStream" uid="uid://c4oiw6wgoflth" path="res://Assets/SFX/castling_move.wav" id="20_y4q0p"]
 [ext_resource type="AudioStream" uid="uid://b7562cw2vxsno" path="res://Assets/SFX/Music/Classicals.de - Satie - Gymnopedie No. 1 - Arranged for Music Box.mp3" id="21_6dage"]
+[ext_resource type="FontFile" uid="uid://dya4h2bhox0w8" path="res://Assets/Fonts/CormorantGaramond-Italic-VariableFont_wght.ttf" id="22_jn6xd"]
 
-[node name="Board" type="Node2D"]
+[sub_resource type="Theme" id="Theme_aaue3"]
+
+[node name="Game" type="Node"]
+
+[node name="Board" type="Node2D" parent="."]
 texture_filter = 1
 texture_repeat = 2
 script = ExtResource("1_glpmc")
@@ -40,16 +45,91 @@ tex_black_knight = ExtResource("12_e123n")
 tex_black_rook = ExtResource("13_4kang")
 tex_black_pawn = ExtResource("14_7hvnj")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="Board"]
 tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAIAAAAAAAIAAAAAAAMAAAAAAAMAAAAAAAQAAAAAAAQAAAAAAAUAAAAAAAUAAAAAAAYAAAAAAAYAAAAAAAcAAAAAAAcAAAABAAAAAAABAAAAAAABAAEAAAABAAEAAAABAAIAAAABAAIAAAABAAMAAAABAAMAAAABAAQAAAABAAQAAAABAAUAAAABAAUAAAABAAYAAAABAAYAAAABAAcAAAABAAcAAAACAAAAAAACAAAAAAACAAEAAAACAAEAAAACAAIAAAACAAIAAAACAAMAAAACAAMAAAACAAQAAAACAAQAAAACAAUAAAACAAUAAAACAAYAAAACAAYAAAACAAcAAAACAAcAAAADAAAAAAADAAAAAAADAAEAAAADAAEAAAADAAIAAAADAAIAAAADAAMAAAADAAMAAAADAAQAAAADAAQAAAADAAUAAAADAAUAAAADAAYAAAADAAYAAAADAAcAAAADAAcAAAAEAAAAAAAEAAAAAAAEAAEAAAAEAAEAAAAEAAIAAAAEAAIAAAAEAAMAAAAEAAMAAAAEAAQAAAAEAAQAAAAEAAUAAAAEAAUAAAAEAAYAAAAEAAYAAAAEAAcAAAAEAAcAAAAFAAAAAAAFAAAAAAAFAAEAAAAFAAEAAAAFAAIAAAAFAAIAAAAFAAMAAAAFAAMAAAAFAAQAAAAFAAQAAAAFAAUAAAAFAAUAAAAFAAYAAAAFAAYAAAAFAAcAAAAFAAcAAAAGAAAAAAAGAAAAAAAGAAEAAAAGAAEAAAAGAAIAAAAGAAIAAAAGAAMAAAAGAAMAAAAGAAQAAAAGAAQAAAAGAAUAAAAGAAUAAAAGAAYAAAAGAAYAAAAGAAcAAAAGAAcAAAAHAAAAAAAHAAAAAAAHAAEAAAAHAAEAAAAHAAIAAAAHAAIAAAAHAAMAAAAHAAMAAAAHAAQAAAAHAAQAAAAHAAUAAAAHAAUAAAAHAAYAAAAHAAYAAAAHAAcAAAAHAAcAAAA=")
 tile_set = ExtResource("1_6dqwo")
 
-[node name="Pieces" type="Node2D" parent="."]
+[node name="Pieces" type="Node2D" parent="Board"]
 
-[node name="Highlights" type="Node2D" parent="."]
+[node name="Highlights" type="Node2D" parent="Board"]
 
-[node name="TurnLight" parent="." instance=ExtResource("16_1cpk3")]
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="TurnLight" parent="UI" instance=ExtResource("16_1cpk3")]
 position = Vector2(597, 5)
+
+[node name="GameOver" type="Control" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOver"]
+layout_mode = 0
+offset_right = 1154.0
+offset_bottom = 596.0
+
+[node name="Message" type="Label" parent="UI/GameOver/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/GameOver/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Rematch" type="Button" parent="UI/GameOver/VBoxContainer/HBoxContainer"]
+texture_filter = 2
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_aaue3")
+theme_override_colors/font_color = Color(18.892157, 18.892157, 18.892157, 1)
+theme_override_fonts/font = ExtResource("22_jn6xd")
+theme_override_font_sizes/font_size = 60
+text = "Rematch"
+
+[node name="MainMenu" type="Button" parent="UI/GameOver/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(16.00457, 16.568003, 18.892157, 1)
+theme_override_fonts/font = ExtResource("22_jn6xd")
+theme_override_font_sizes/font_size = 60
+text = "Main Menu"
+
+[node name="PromotionPanel" type="Control" parent="UI"]
+visible = false
+anchors_preset = 0
+offset_right = 200.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/PromotionPanel"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 40.0
+alignment = 1
+
+[node name="QueenBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RookBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BishopBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="KnightBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="SFX" type="Node2D" parent="."]
 
@@ -69,3 +149,10 @@ stream = ExtResource("20_y4q0p")
 [node name="Satie" type="AudioStreamPlayer2D" parent="SFX"]
 stream = ExtResource("21_6dage")
 parameters/looping = true
+
+[connection signal="pressed" from="UI/GameOver/VBoxContainer/HBoxContainer/Rematch" to="Board" method="_on_rematch_pressed"]
+[connection signal="pressed" from="UI/GameOver/VBoxContainer/HBoxContainer/MainMenu" to="Board" method="_on_main_menu_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/QueenBtn" to="Board" method="_on_queen_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/RookBtn" to="Board" method="_on_rook_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/BishopBtn" to="Board" method="_on_bishop_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/KnightBtn" to="Board" method="_on_knight_btn_pressed"]

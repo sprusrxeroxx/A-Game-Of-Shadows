@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://oe6p5x5r30lm"]
 
-[ext_resource type="Script" uid="uid://chjp10reoclay" path="res://UI/turn_light.gd" id="1_kjj8o"]
+[ext_resource type="Script" uid="uid://chjp10reoclay" path="res://UI/scripts/turn_light.gd" id="1_kjj8o"]
 [ext_resource type="FontFile" uid="uid://bvkygw5xhiiq3" path="res://Assets/Fonts/CormorantGaramond-VariableFont_wght.ttf" id="2_nm0h0"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_kjj8o"]

@@ -1,28 +1,53 @@
 extends Node2D
 
+var game_state: GameState = GameState.new()
+
 var selected: Node = null
-var current_turn: bool = 1
+var current_turn: bool = true
+
 const PAWN  := 0
-const KNIGHT:= 3
-const BISHOP:= 4
-const ROOK  := 5
-const QUEEN := 11
-const KING  := 9999999
- 
+const KNIGHT := 3
+const BISHOP := 4
+const ROOK   := 5
+const QUEEN  := 11
+const KING   := 9999999
+
+const ROWS := 8
+const COLS := 8
+
 @onready var piece_container: Node2D = $Pieces
 @onready var tile_layer: TileMapLayer = $TileMapLayer
 @export var piece_scene: PackedScene
-@onready var turn_light: Node2D = $TurnLight
-@onready var highlights_container: Node2D = $Highlights
-@onready var has_moved = false
-@onready var error_sfx: AudioStreamPlayer2D = $SFX/Error
-@onready var move_sfx: AudioStreamPlayer2D = $SFX/Move
-@onready var capture: AudioStreamPlayer2D = $SFX/Capture
-@onready var castling: AudioStreamPlayer2D = $SFX/Castling
-@onready var satie: AudioStreamPlayer2D = $SFX/Satie
 
+@onready var highlights_container: Node2D = $Highlights
+
+@onready var capture: AudioStreamPlayer2D = $"../SFX/Capture"
+@onready var move_sfx: AudioStreamPlayer2D = $"../SFX/Move"
+@onready var error_sfx: AudioStreamPlayer2D = $"../SFX/Error"
+@onready var castling: AudioStreamPlayer2D = $"../SFX/Castling"
+@onready var satie: AudioStreamPlayer2D = $"../SFX/Satie"
+
+@onready var game_over: Control = $"../UI/GameOver"
+@onready var turn_light: Node2D = $"../UI/TurnLight"
+@onready var promotion_panel: Control = $"../UI/PromotionPanel"
+@onready var promo_queen_btn: Button = $"../UI/PromotionPanel/HBoxContainer/QueenBtn"
+@onready var promo_rook_btn: Button = $"../UI/PromotionPanel/HBoxContainer/RookBtn"
+@onready var promo_bishop_btn: Button = $"../UI/PromotionPanel/HBoxContainer/BishopBtn"
+@onready var promo_knight_btn: Button = $"../UI/PromotionPanel/HBoxContainer/KnightBtn"
+
+# visual node mirror of the logical board
+var node_board: Array = []
+
+# highlight state
 var _highlight_pool: Array = []
 var _active_highlights: Array = []
+
+# promotion state
+var promotion_active: bool = false
+var promotion_from_pos: Vector2i = Vector2i(-1, -1)
+var promotion_to_pos: Vector2i = Vector2i(-1, -1)
+var promotion_old_piece: Node = null
+var promotion_color: bool = true
 
 # White pieces
 @export var tex_white_king: Texture2D
@@ -40,56 +65,70 @@ var _active_highlights: Array = []
 @export var tex_black_rook: Texture2D
 @export var tex_black_pawn: Texture2D
 
-
-
-# 8x8 Board
-const ROWS := 8
-const COLS := 8
-var board := []
-
-var start_pos = [
-	[{"type":5,"color_white":true},{"type":3,"color_white":true},{"type":4,"color_white":true},{"type":9999999,"color_white":true},{"type":11,"color_white":true},{"type":4,"color_white":true},{"type":3,"color_white":true},{"type":5,"color_white":true}],
-	[{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true}],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false}],
-	[{"type":5,"color_white":false},{"type":3,"color_white":false},{"type":4,"color_white":false},{"type":9999999,"color_white":false},{"type":11,"color_white":false},{"type":4,"color_white":false},{"type":3,"color_white":false},{"type":5,"color_white":false}]
-]
+# Multiplayer Vars
+var is_multiplayer: bool = false
+var my_color: bool = true
+var waiting_for_move: bool = false
 
 func _ready():
-	_init_board_array()
-	
-	for r in start_pos.size():
-		for c in start_pos[r].size():
-			var t = start_pos[r][c]
-			if t:
-				spawn_piece(t, Vector2(r, c))
+	_setup_game_state()
+	_init_node_board_array()
+	_spawn_visual_board_from_state()
+	_connect_ui()
+	hide_game_over()
+	hide_promotion_panel()
 	print_board_state()
 	satie.play()
-	
 
-"""
-Initialize Board
-@returns : nxn empty board for tracking game state
-"""
-func _init_board_array():
-	board.clear()
+func _setup_game_state() -> void:
+	game_state = GameState.new()
+	game_state._init_board_from_startpos()
+	current_turn = game_state.current_turn
+
+func _init_node_board_array() -> void:
+	node_board.clear()
 	for r in ROWS:
-		var row = []
+		var row: Array = []
 		for c in COLS:
 			row.append(null)
-		board.append(row)
+		node_board.append(row)
 
+func _spawn_visual_board_from_state() -> void:
+	for r in ROWS:
+		for c in COLS:
+			var data = game_state.get_piece_at(r, c)
+			if data != null:
+				spawn_piece(data, Vector2i(r, c))
 
-# returns Texture2D matching type and color
+func _connect_ui() -> void:
+	if game_over:
+		var rem = game_over.get_node("VBoxContainer/HBoxContainer/Rematch") as Button
+		var mm = game_over.get_node("VBoxContainer/HBoxContainer/MainMenu") as Button
+
+		if rem and not rem.pressed.is_connected(Callable(self, "_on_rematch_pressed")):
+			rem.pressed.connect(Callable(self, "_on_rematch_pressed"))
+
+		if mm and not mm.pressed.is_connected(Callable(self, "_on_main_menu_pressed")):
+			mm.pressed.connect(Callable(self, "_on_main_menu_pressed"))
+
+	if promo_queen_btn and not promo_queen_btn.pressed.is_connected(Callable(self, "_on_queen_btn_pressed")):
+		promo_queen_btn.pressed.connect(Callable(self, "_on_queen_btn_pressed"))
+
+	if promo_rook_btn and not promo_rook_btn.pressed.is_connected(Callable(self, "_on_rook_btn_pressed")):
+		promo_rook_btn.pressed.connect(Callable(self, "_on_rook_btn_pressed"))
+
+	if promo_bishop_btn and not promo_bishop_btn.pressed.is_connected(Callable(self, "_on_bishop_btn_pressed")):
+		promo_bishop_btn.pressed.connect(Callable(self, "_on_bishop_btn_pressed"))
+
+	if promo_knight_btn and not promo_knight_btn.pressed.is_connected(Callable(self, "_on_knight_btn_pressed")):
+		promo_knight_btn.pressed.connect(Callable(self, "_on_knight_btn_pressed"))
+
 func _texture_for_piece(type:int, color_white:bool) -> Texture2D:
 	match type:
 		KING:
-			return  tex_white_king if color_white else tex_black_king
+			return tex_white_king if color_white else tex_black_king
 		QUEEN:
-			return tex_white_queen if color_white  else tex_black_queen
+			return tex_white_queen if color_white else tex_black_queen
 		BISHOP:
 			return tex_white_bishop if color_white else tex_black_bishop
 		KNIGHT:
@@ -101,164 +140,230 @@ func _texture_for_piece(type:int, color_white:bool) -> Texture2D:
 		_:
 			return null
 
-"""
-Spawn A Piece On The Board
-@returns: Vector2i(r, c) pos of the placed piece
-"""
 func spawn_piece(piece_data: Dictionary, pos: Vector2i) -> Vector2i:
 	var r = pos.x
 	var c = pos.y
-	
+
 	if r < 0 or r >= ROWS or c < 0 or c >= COLS:
-		push_error("spawn_piece: out of bounds" + str(pos))
+		push_error("spawn_piece: out of bounds " + str(pos))
 		return pos
-	
-	if board[r][c] != null:
-		push_warning("spawn_piece: board slot already occupied at " + str(pos))
-	
+
 	var p = piece_scene.instantiate()
 	if not p:
-		push_error("spawn_piece: could not instatiate piece_scene")
+		push_error("spawn_piece: could not instantiate piece_scene")
 		return pos
-	
-	if piece_data.has("type"):
-		p.piece_type = int(piece_data["type"])
-	if piece_data.has("color_white"):
-		p.color_white = bool(piece_data["color_white"])
-	if piece_data.has("starting_coord"):
-		p.starting_coord = piece_data["starting_coord"]
-	
+
+	p.piece_type = int(piece_data.get("type", PAWN))
+	p.color_white = bool(piece_data.get("color_white", true))
+	p.has_moved = bool(piece_data.get("has_moved", false))
+
 	piece_container.add_child(p)
-	
-	# give piece texture image
+
 	var tex = _texture_for_piece(p.piece_type, p.color_white)
 	if tex:
 		if p.has_method("set_texture"):
 			p.set_texture(tex)
-		else:
-			if p.has_node("Sprite2D"):
-				(p.get_node("Sprite2D") as Sprite2D).texture = tex
-	
+		elif p.has_node("Sprite2D"):
+			(p.get_node("Sprite2D") as Sprite2D).texture = tex
+
 	p.name = "Piece_%s_%d_%d" % [str(p.piece_type), r, c]
 	p.set_grid_position(r, c, tile_layer)
-	
-	# Update board
-	board[r][c] = p
-	
-	# print("spawn_piece: ", p.name, " type= ", p.piece_type, " color= ", p.color_white, " grid= ", pos, " world= ", p.global_position)
-	
+
+	node_board[r][c] = p
+
 	return pos
 
-"""
-Prints String Version Of Board State
-"""
 func print_board_state():
 	print("Board state (rows 0..7)")
 	for r in ROWS:
 		var row_repr := []
 		for c in COLS:
-			var cell = board[r][c]
+			var cell = game_state.board[r][c]
 			if cell:
-				row_repr.append(str(cell.name))
+				row_repr.append("%s%s" % [str(cell["type"]), "W" if cell["color_white"] else "B"])
 			else:
 				row_repr.append(".")
 		print(row_repr)
-			
+
 func _unhandled_input(ev):
+	if promotion_active:
+		return
+	if game_over and game_over.visible:
+		return
+	if is_multiplayer and current_turn != my_color:
+		return
+
 	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-		var cell = tile_layer.local_to_map(get_global_mouse_position())		
-		
+		var cell = tile_layer.local_to_map(get_global_mouse_position())
 		var col = int(cell.x)
 		var row = int(cell.y)
-		
+
 		if col >= 0 and col < COLS and row >= 0 and row < ROWS:
-			print("Clicked cell:", cell)
 			on_board_click(row, col)
-		else:
-			print("Clicked outside board:", cell)
 
-func on_board_click(r: int, c: int) -> void	:
+func on_board_click(r:int, c:int) -> void:
+	if promotion_active:
+		return
+	if game_over and game_over.visible:
+		return
+
 	clear_highlights()
-	var clicked_piece = board[r][c]
-	
-	if clicked_piece and clicked_piece.color_white == current_turn:
-		clear_highlights()
-		selected = clicked_piece
-		show_highlights(selected.get_valid_moves(board))
-		return 
 
-	# If we have a selection and clicked a square that isn't our own piece
+	var clicked_piece = game_state.get_piece_at(r, c)
+
+	if clicked_piece and bool(clicked_piece["color_white"]) == current_turn:
+		selected = node_board[r][c]
+		if selected == null:
+			return
+		var legal_moves := game_state.get_legal_moves(r, c)
+		show_highlights(legal_moves)
+		return
+
 	if selected:
-		var moves = selected.get_valid_moves(board)
-		for mv in moves:
+		var legal_moves = game_state.get_legal_moves(int(selected.grid_pos.x), int(selected.grid_pos.y))
+		for mv in legal_moves:
 			if mv.x == r and mv.y == c:
 				perform_move(selected, r, c)
 				selected = null
-				print_board_state()
 				return
+
 		selected = null
 		error_sfx.play()
 		clear_highlights()
 
 func perform_move(piece: Node, to_r:int, to_c:int) -> void:
 	clear_highlights()
+	if piece == null:
+		return
+
 	var from = piece.grid_pos
 	var from_r = int(from.x)
 	var from_c = int(from.y)
-	var is_castling := false
-	var target = board[to_r][to_c]
 
-	if piece.piece_type == KING and abs(to_c - from_c) == 2 and to_r == from_r:
-		is_castling = true
-	if target:
-		target.queue_free()
+	# detect promotion before applying move
+	if _is_promotion_move(piece, to_r):
+		promotion_active = true
+		promotion_from_pos = Vector2i(from_r, from_c)
+		promotion_to_pos = Vector2i(to_r, to_c)
+		promotion_old_piece = piece
+		promotion_color = piece.color_white
+		show_promotion_panel(promotion_color)
+		return
+	if is_multiplayer:
+		_send_move_to_server(from_r, from_c, to_r, to_c, null)
+	else:
+		_commit_game_move(from_r, from_c, to_r, to_c, null)
 
-	board[from_r][from_c] = null 	#remove king from old slot
+func _commit_game_move(from_r:int, from_c:int, to_r:int, to_c:int, promotion_type: Variant) -> bool:
+	var moving_node = node_board[from_r][from_c]
+	if moving_node == null:
+		error_sfx.play()
+		return false
 
-	if is_castling:
-		if to_c > from_c:			# identify which side and rook location
-			var rook_col = COLS - 1
-			var rook_node = board[from_r][rook_col]
-			if rook_node and rook_node.piece_type == ROOK and rook_node.color_white == piece.color_white:
-				var new_rook_col = to_c - 1
-				board[from_r][rook_col] = null # clear old rook slot
-				board[from_r][new_rook_col] = rook_node
-				rook_node.set_grid_position(from_r, new_rook_col, tile_layer)
-				rook_node.grid_pos = Vector2i(from_r, new_rook_col)
-				rook_node.has_moved = true
-		else:
-			var rook_col_q = 0
-			var rook_node_q = board[from_r][rook_col_q]
-			if rook_node_q and rook_node_q.piece_type == ROOK and rook_node_q.color_white == piece.color_white:
-				var new_rook_col_q = to_c + 1
-				board[from_r][rook_col_q] = null
-				board[from_r][new_rook_col_q] = rook_node_q
-				rook_node_q.set_grid_position(from_r, new_rook_col_q, tile_layer)
-				rook_node_q.grid_pos = Vector2i(from_r, new_rook_col_q)
-				rook_node_q.has_moved = true
+	if not game_state.make_move(from_r, from_c, to_r, to_c, promotion_type):
+		error_sfx.play()
+		return false
+
+	_apply_last_move_visuals(moving_node)
+
+	current_turn = game_state.current_turn
+
+	var mv = game_state.last_move
+	if bool(mv.get("is_castling", false)):
 		castling.play()
-				
-	board[to_r][to_c] = piece
-	piece.set_grid_position(to_r, to_c, tile_layer)
-	piece.grid_pos = Vector2i(to_r, to_c)
-	piece.has_moved = true
-	current_turn = not current_turn
-	turn_light.toggle_color()
-	
-	if target != null and target.color_white != selected.color_white:
+	elif mv.get("captured", null) != null:
 		capture.play()
 	else:
-		if not is_castling: 
-			move_sfx.play()
+		move_sfx.play()
 
-# Helpers
+	print_board_state()
+
+	if game_state.is_checkmate(current_turn):
+		var winner = "White" if not current_turn else "Black"
+		show_game_over("Checkmate — %s wins" % winner)
+		return true
+	elif game_state.is_stalemate(current_turn):
+		show_game_over("Stalemate — Draw")
+		return true
+
+	turn_light.toggle_color()
+	return true
+
+func _apply_last_move_visuals(moving_node: Node) -> void:
+	var mv = game_state.last_move
+	var from = mv.get("from", Vector2i(-1, -1))
+	var to = mv.get("to", Vector2i(-1, -1))
+
+	var from_r = int(from.x)
+	var from_c = int(from.y)
+	var to_r = int(to.x)
+	var to_c = int(to.y)
+
+	# remove captured visual node
+	var captured_node = node_board[to_r][to_c]
+	if captured_node != null:
+		captured_node.queue_free()
+		node_board[to_r][to_c] = null
+
+	# clear old square
+	node_board[from_r][from_c] = null
+
+	# rook move for castling
+	if bool(mv.get("is_castling", false)):
+		var rook_from = mv.get("rook_from", Vector2i(-1, -1))
+		var rook_to = mv.get("rook_to", Vector2i(-1, -1))
+
+		var rfr = int(rook_from.x)
+		var rfc = int(rook_from.y)
+		var rtr = int(rook_to.x)
+		var rtc = int(rook_to.y)
+
+		var rook_node = node_board[rfr][rfc]
+		if rook_node != null:
+			node_board[rfr][rfc] = null
+			node_board[rtr][rtc] = rook_node
+			rook_node.set_grid_position(rtr, rtc, tile_layer)
+			rook_node.grid_pos = Vector2i(rtr, rtc)
+			rook_node.has_moved = true
+
+	# promotion: remove pawn visual and spawn promoted piece
+	if bool(mv.get("is_promotion", false)):
+		if moving_node != null and moving_node.is_inside_tree():
+			moving_node.queue_free()
+
+		node_board[to_r][to_c] = null
+		var promo_data = game_state.get_piece_at(to_r, to_c)
+		if promo_data != null:
+			spawn_piece(promo_data, Vector2i(to_r, to_c))
+		return
+
+	# normal move
+	node_board[to_r][to_c] = moving_node
+	if moving_node != null:
+		moving_node.set_grid_position(to_r, to_c, tile_layer)
+		moving_node.grid_pos = Vector2i(to_r, to_c)
+		moving_node.has_moved = true
+
+func _is_promotion_move(piece: Node, to_r:int) -> bool:
+	if piece == null:
+		return false
+	if piece.piece_type != PAWN:
+		return false
+	if piece.color_white and to_r == ROWS - 1:
+		return true
+	if not piece.color_white and to_r == 0:
+		return true
+	return false
+
+func _in_bounds(r:int, c:int) -> bool:
+	return r >= 0 and r < ROWS and c >= 0 and c < COLS
+
 func grid_to_world(r:int, c:int) -> Vector2:
-	var local_origin : Vector2 = tile_layer.map_to_local(Vector2(c, r))
+	var local_origin: Vector2 = tile_layer.map_to_local(Vector2(c, r))
 	var ts := tile_layer.tile_set
 	var center_local := local_origin + ts.tile_size * 0.01
 	return tile_layer.to_global(center_local)
 
-# get a highlightdot from pool or create a new one
 func _get_highlight_dot() -> HighlightDot:
 	if _highlight_pool.size() > 0:
 		var d = _highlight_pool.pop_back()
@@ -268,37 +373,142 @@ func _get_highlight_dot() -> HighlightDot:
 	highlights_container.add_child(new_dot)
 	return new_dot
 
-# return a dot to the pool (hide it)
 func _recycle_highlight_dot(dot: HighlightDot) -> void:
 	dot.visible = false
 	_highlight_pool.append(dot)
 
-# show green dots for an array of Vector2i moves (row,col)
 func show_highlights(moves: Array) -> void:
 	clear_highlights()
-	
+
 	if moves == null:
 		return
-		
+
 	var tile_sz := tile_layer.tile_set.tile_size
 	var radius = min(tile_sz.x, tile_sz.y) * 0.05
+
 	for mv in moves:
 		var r = int(mv.x)
 		var c = int(mv.y)
 		if r < 0 or r >= ROWS or c < 0 or c >= COLS:
 			continue
+
 		var dot = _get_highlight_dot()
 		dot.position = grid_to_world(r, c)
 		dot.set_radius(radius)
-		var target = board[r][c]
-		if target != null and target.color_white != selected.color_white:
-			dot.set_color(Color(1,0.2,0.2,0.9)) # make capture squares red by checking if target exists
+
+		var target = game_state.get_piece_at(r, c)
+		if target != null and selected != null and target["color_white"] != selected.color_white:
+			dot.set_color(Color(1, 0.2, 0.2, 0.9))
 		else:
 			dot.set_color(Color(0.0, 0.9, 0.2, 0.85))
+
 		_active_highlights.append(dot)
-	
-	# hide all active highlights and recycle them
+
 func clear_highlights() -> void:
 	for dot in _active_highlights:
 		_recycle_highlight_dot(dot)
 	_active_highlights.clear()
+
+func show_game_over(message: String) -> void:
+	if not game_over:
+		return
+	game_over.visible = true
+	var msg_node = game_over.get_node("VBoxContainer/Message") as Label
+	msg_node.text = message
+	clear_highlights()
+	hide_promotion_panel()
+
+func hide_game_over() -> void:
+	if game_over:
+		game_over.visible = false
+
+func restart_game() -> void:
+	hide_game_over()
+	hide_promotion_panel()
+	clear_highlights()
+
+	selected = null
+	promotion_active = false
+	promotion_old_piece = null
+	promotion_from_pos = Vector2i(-1, -1)
+	promotion_to_pos = Vector2i(-1, -1)
+
+	for child in piece_container.get_children():
+		child.queue_free()
+
+	_setup_game_state()
+	_init_node_board_array()
+	_spawn_visual_board_from_state()
+	print_board_state()
+	
+	turn_light.toggle_color()
+	satie.play()
+
+func go_to_main_menu() -> void:
+	get_tree().change_scene_to_file("res://UI/menu.tscn")
+
+func _on_rematch_pressed() -> void:
+	restart_game()
+
+func _on_main_menu_pressed() -> void:
+	go_to_main_menu()
+
+func show_promotion_panel(is_white: bool) -> void:
+	if not promotion_panel:
+		return
+
+	promotion_panel.visible = true
+	promo_queen_btn.icon = _texture_for_piece(QUEEN, is_white)
+	promo_rook_btn.icon = _texture_for_piece(ROOK, is_white)
+	promo_bishop_btn.icon = _texture_for_piece(BISHOP, is_white)
+	promo_knight_btn.icon = _texture_for_piece(KNIGHT, is_white)
+
+func hide_promotion_panel() -> void:
+	if promotion_panel:
+		promotion_panel.visible = false
+
+func _on_queen_btn_pressed() -> void:
+	_on_promo_choice(QUEEN)
+
+func _on_rook_btn_pressed() -> void:
+	_on_promo_choice(ROOK)
+
+func _on_bishop_btn_pressed() -> void:
+	_on_promo_choice(BISHOP)
+
+func _on_knight_btn_pressed() -> void:
+	_on_promo_choice(KNIGHT)
+
+func _on_promo_choice(new_type: int) -> void:
+	if not promotion_active:
+		return
+
+	hide_promotion_panel()
+
+	var from_r = int(promotion_from_pos.x)
+	var from_c = int(promotion_from_pos.y)
+	var to_r = int(promotion_to_pos.x)
+	var to_c = int(promotion_to_pos.y)
+	promotion_active = false
+	
+	if is_multiplayer:
+		_send_move_to_server(from_r, from_c, to_r, to_c, new_type)
+	else:
+		if _commit_game_move(from_r, from_c, to_r, to_c, new_type):
+			promotion_old_piece = null
+			promotion_from_pos = Vector2i(-1, -1)
+			promotion_to_pos = Vector2i(-1, -1)
+		else:
+			error_sfx.play()
+			promotion_old_piece = null
+			promotion_from_pos = Vector2i(-1, -1)
+			promotion_to_pos = Vector2i(-1, -1)
+
+func _send_move_to_server(from_r:int, from_c:int, to_r:int, to_c:int, promotion_type: Variant) -> void:
+	pass
+
+func apply_remote_move(from_r:int, from_c:int, to_r:int, to_c:int, promotion_type: Variant = null) -> void:
+	if _commit_game_move(from_r, from_c, to_r, to_c, promotion_type):
+		pass
+	else:
+		push_error("Failed to apply remote move (%d,%d)->(%d,%d) promo=%s" % [from_r, from_c, to_r, to_c, str(promotion_type)])

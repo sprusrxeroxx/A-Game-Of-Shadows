@@ -8,7 +8,6 @@ const ROOK  := 5
 const QUEEN := 11
 const KING  := 9999999
 
-# exported for easy tuning in the editor
 @export var piece_type: int = PAWN
 @export var color_white: bool = true   # true = white, false = black
 @export var piece_spritesheet: Texture2D
