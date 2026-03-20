@@ -7,5 +7,16 @@ Ever wanted to play chess without the stress of the clock, or beating an opponen
 ##   Gameplay
 <img width="1155" height="652" alt="Screenshot 2026-02-22 215856" src="https://github.com/user-attachments/assets/4ee76009-bc5f-4291-a010-80428f49476c" />
 
+# Current
+- Single Player Mode
+- Custom Board Intergration
+- Classical Music Playlist
+- Move validation checks
 
-
+# Future
+- Online Multiplayer Mode
+- Game Analysis
+- Training
+- Match Prep Mode
+- FEN support
+- Preferences
