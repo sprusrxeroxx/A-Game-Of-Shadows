@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=4 uid="uid://bobn8eo1simqb"]
+[gd_scene load_steps=25 format=4 uid="uid://bobn8eo1simqb"]
 
 [ext_resource type="TileSet" uid="uid://bitxqcv4gpsyr" path="res://Tiles/chess_tile_set.tres" id="1_6dqwo"]
 [ext_resource type="Script" uid="uid://dysorl64kdoep" path="res://Board/board.gd" id="1_glpmc"]
@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://bact7pgrp8fhn" path="res://Assets/chess_piesces/black_pawn.png" id="14_7hvnj"]
 [ext_resource type="PackedScene" uid="uid://oe6p5x5r30lm" path="res://UI/turn_light.tscn" id="16_1cpk3"]
 [ext_resource type="AudioStream" uid="uid://bayws77c6y2il" path="res://Assets/SFX/new_capture.wav" id="17_0fkod"]
+[ext_resource type="FontFile" uid="uid://bvkygw5xhiiq3" path="res://Assets/Fonts/CormorantGaramond-VariableFont_wght.ttf" id="17_aaue3"]
 [ext_resource type="AudioStream" uid="uid://dnyvnw377vdky" path="res://Assets/SFX/no_capture_move.wav" id="18_y4q0p"]
 [ext_resource type="AudioStream" uid="uid://c06wbb4alvxmy" path="res://Assets/SFX/new_error_move_.wav" id="19_y4q0p"]
 [ext_resource type="AudioStream" uid="uid://c4oiw6wgoflth" path="res://Assets/SFX/castling_move.wav" id="20_y4q0p"]
@@ -46,12 +47,17 @@ tex_black_rook = ExtResource("13_4kang")
 tex_black_pawn = ExtResource("14_7hvnj")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Board"]
+texture_filter = 2
 tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAIAAAAAAAIAAAAAAAMAAAAAAAMAAAAAAAQAAAAAAAQAAAAAAAUAAAAAAAUAAAAAAAYAAAAAAAYAAAAAAAcAAAAAAAcAAAABAAAAAAABAAAAAAABAAEAAAABAAEAAAABAAIAAAABAAIAAAABAAMAAAABAAMAAAABAAQAAAABAAQAAAABAAUAAAABAAUAAAABAAYAAAABAAYAAAABAAcAAAABAAcAAAACAAAAAAACAAAAAAACAAEAAAACAAEAAAACAAIAAAACAAIAAAACAAMAAAACAAMAAAACAAQAAAACAAQAAAACAAUAAAACAAUAAAACAAYAAAACAAYAAAACAAcAAAACAAcAAAADAAAAAAADAAAAAAADAAEAAAADAAEAAAADAAIAAAADAAIAAAADAAMAAAADAAMAAAADAAQAAAADAAQAAAADAAUAAAADAAUAAAADAAYAAAADAAYAAAADAAcAAAADAAcAAAAEAAAAAAAEAAAAAAAEAAEAAAAEAAEAAAAEAAIAAAAEAAIAAAAEAAMAAAAEAAMAAAAEAAQAAAAEAAQAAAAEAAUAAAAEAAUAAAAEAAYAAAAEAAYAAAAEAAcAAAAEAAcAAAAFAAAAAAAFAAAAAAAFAAEAAAAFAAEAAAAFAAIAAAAFAAIAAAAFAAMAAAAFAAMAAAAFAAQAAAAFAAQAAAAFAAUAAAAFAAUAAAAFAAYAAAAFAAYAAAAFAAcAAAAFAAcAAAAGAAAAAAAGAAAAAAAGAAEAAAAGAAEAAAAGAAIAAAAGAAIAAAAGAAMAAAAGAAMAAAAGAAQAAAAGAAQAAAAGAAUAAAAGAAUAAAAGAAYAAAAGAAYAAAAGAAcAAAAGAAcAAAAHAAAAAAAHAAAAAAAHAAEAAAAHAAEAAAAHAAIAAAAHAAIAAAAHAAMAAAAHAAMAAAAHAAQAAAAHAAQAAAAHAAUAAAAHAAUAAAAHAAYAAAAHAAYAAAAHAAcAAAAHAAcAAAA=")
 tile_set = ExtResource("1_6dqwo")
 
 [node name="Pieces" type="Node2D" parent="Board"]
+texture_filter = 2
 
 [node name="Highlights" type="Node2D" parent="Board"]
+
+[node name="Camera2D" type="Camera2D" parent="Board"]
+position = Vector2(577, 324)
 
 [node name="UI" type="Control" parent="."]
 layout_mode = 3
@@ -76,9 +82,23 @@ layout_mode = 0
 offset_right = 1154.0
 offset_bottom = 596.0
 
-[node name="Message" type="Label" parent="UI/GameOver/VBoxContainer"]
+[node name="ColorRect" type="ColorRect" parent="UI/GameOver/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+color = Color(0, 0, 0, 0.49411765)
+
+[node name="Message" type="Label" parent="UI/GameOver/VBoxContainer/ColorRect"]
+layout_mode = 0
+offset_top = 42.0
+offset_right = 1154.0
+offset_bottom = 238.0
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("17_aaue3")
+theme_override_font_sizes/font_size = 64
+text = "White Wins"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="UI/GameOver/VBoxContainer"]
 layout_mode = 2
@@ -88,7 +108,8 @@ alignment = 1
 [node name="Rematch" type="Button" parent="UI/GameOver/VBoxContainer/HBoxContainer"]
 texture_filter = 2
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 6
+size_flags_vertical = 4
 theme = SubResource("Theme_aaue3")
 theme_override_colors/font_color = Color(18.892157, 18.892157, 18.892157, 1)
 theme_override_fonts/font = ExtResource("22_jn6xd")
@@ -97,7 +118,8 @@ text = "Rematch"
 
 [node name="MainMenu" type="Button" parent="UI/GameOver/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 6
+size_flags_vertical = 4
 theme_override_colors/font_color = Color(16.00457, 16.568003, 18.892157, 1)
 theme_override_fonts/font = ExtResource("22_jn6xd")
 theme_override_font_sizes/font_size = 60
@@ -106,30 +128,37 @@ text = "Main Menu"
 [node name="PromotionPanel" type="Control" parent="UI"]
 visible = false
 anchors_preset = 0
-offset_right = 200.0
-offset_bottom = 40.0
+offset_right = 75.0
+offset_bottom = 226.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="UI/PromotionPanel"]
+[node name="ColorRect" type="ColorRect" parent="UI/PromotionPanel"]
 layout_mode = 0
-offset_right = 200.0
-offset_bottom = 40.0
+offset_right = 76.0
+color = Color(1, 1, 1, 0.95686275)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/PromotionPanel"]
+visibility_layer = 262144
+layout_mode = 0
+offset_right = 76.0
+offset_bottom = 300.0
+theme_override_constants/separation = 0
 alignment = 1
 
-[node name="QueenBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+[node name="QueenBtn" type="Button" parent="UI/PromotionPanel/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="RookBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+[node name="RookBtn" type="Button" parent="UI/PromotionPanel/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="BishopBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+[node name="BishopBtn" type="Button" parent="UI/PromotionPanel/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="KnightBtn" type="Button" parent="UI/PromotionPanel/HBoxContainer"]
+[node name="KnightBtn" type="Button" parent="UI/PromotionPanel/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="SFX" type="Node2D" parent="."]
 
@@ -152,7 +181,7 @@ parameters/looping = true
 
 [connection signal="pressed" from="UI/GameOver/VBoxContainer/HBoxContainer/Rematch" to="Board" method="_on_rematch_pressed"]
 [connection signal="pressed" from="UI/GameOver/VBoxContainer/HBoxContainer/MainMenu" to="Board" method="_on_main_menu_pressed"]
-[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/QueenBtn" to="Board" method="_on_queen_btn_pressed"]
-[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/RookBtn" to="Board" method="_on_rook_btn_pressed"]
-[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/BishopBtn" to="Board" method="_on_bishop_btn_pressed"]
-[connection signal="pressed" from="UI/PromotionPanel/HBoxContainer/KnightBtn" to="Board" method="_on_knight_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/VBoxContainer/QueenBtn" to="Board" method="_on_queen_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/VBoxContainer/RookBtn" to="Board" method="_on_rook_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/VBoxContainer/BishopBtn" to="Board" method="_on_bishop_btn_pressed"]
+[connection signal="pressed" from="UI/PromotionPanel/VBoxContainer/KnightBtn" to="Board" method="_on_knight_btn_pressed"]

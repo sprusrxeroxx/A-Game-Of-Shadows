@@ -16,20 +16,12 @@ var current_turn: bool = true
 # Used by Board to update visuals after a successful move
 var last_move: Dictionary = {}
 
-# Optional: Board can overwrite this before calling _init_board_from_startpos()
-var start_pos: Array = [
-	[{"type":5,"color_white":true},{"type":3,"color_white":true},{"type":4,"color_white":true},{"type":9999999,"color_white":true},{"type":11,"color_white":true},{"type":4,"color_white":true},{"type":3,"color_white":true},{"type":5,"color_white":true}],
-	[{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true},{"type":0,"color_white":true}],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[null,null,null,null,null,null,null,null],
-	[{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false},{"type":0,"color_white":false}],
-	[{"type":5,"color_white":false},{"type":3,"color_white":false},{"type":4,"color_white":false},{"type":9999999,"color_white":false},{"type":11,"color_white":false},{"type":4,"color_white":false},{"type":3,"color_white":false},{"type":5,"color_white":false}]
-]
+# Default starting position FEN (might need to be flipped)
+const DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 func _init() -> void:
-	_init_board_from_startpos()
+	#_init_board_from_startpos()
+	set_from_fen(DEFAULT_FEN)
 
 func _init_empty_board() -> void:
 	board.clear()
@@ -39,6 +31,43 @@ func _init_empty_board() -> void:
 			row.append(null)
 		board.append(row)
 
+# Initialise with a FEN string
+func set_from_fen(fen_string: String = DEFAULT_FEN) -> void:
+	_init_empty_board()
+	var parts = fen_string.split(" ")
+	if parts.size() < 2:
+		push_error("Invalid FEN: need at least board and turn")
+		return
+	
+	var rows = parts[0].split("/")
+	if rows.size() != 8:
+		push_error("Invalid FEN: must have 8 rows")
+		return
+	
+	rows.reverse()
+	
+	# 1. Parse piece placement
+	for r in range(8):
+		var row_str = rows[r].reverse()
+		var c = 0
+		for ch in row_str:
+			if c > 7:
+				break
+			if ch.is_valid_int():
+				c += int(ch)
+			else:
+				var color_white = ch != ch.to_lower() #check piece color
+				var piece_type = _fen_char_to_piece_type(ch.to_lower())
+				if piece_type != null:
+					board[r][c] = _make_piece(piece_type, color_white, false)
+				c += 1
+		if c != 8:
+			push_error("Invalid FEN: row %d has %d columns" % [r, c])
+	
+	# 2. Parse active color
+	var turn_str = parts[1]
+	current_turn = (turn_str == "w")
+	
 func _make_piece(type:int, color_white:bool, has_moved:bool = false) -> Dictionary:
 	return {
 		"type": type,
@@ -54,25 +83,6 @@ func _in_bounds(r:int, c:int) -> bool:
 
 func _is_empty(r:int, c:int) -> bool:
 	return _in_bounds(r, c) and board[r][c] == null
-
-func set_start_pos(data: Array) -> void:
-	start_pos = data.duplicate(true)
-
-func _init_board_from_startpos() -> void:
-	_init_empty_board()
-	for r in ROWS:
-		if r >= start_pos.size():
-			continue
-		for c in COLS:
-			if c >= start_pos[r].size():
-				continue
-			var p = start_pos[r][c]
-			if p != null:
-				board[r][c] = _make_piece(
-					int(p["type"]),
-					bool(p["color_white"]),
-					bool(p.get("has_moved", false))
-				)
 
 func get_piece_at(row:int, col:int) -> Variant:
 	if not _in_bounds(row, col):
@@ -271,6 +281,17 @@ func _is_valid_promotion_type(t:int) -> bool:
 func _is_castling_move(piece: Dictionary, from_row:int, from_col:int, to_row:int, to_col:int) -> bool:
 	return piece["type"] == KING and from_row == to_row and abs(to_col - from_col) == 2
 
+func _is_promotion_move(piece: Node, to_r:int) -> bool:
+	if piece == null:
+		return false
+	if piece.piece_type != PAWN:
+		return false
+	if piece.color_white and to_r == ROWS - 1:
+		return true
+	if not piece.color_white and to_r == 0:
+		return true
+	return false
+	
 func _has_move(moves: Array, target: Vector2i) -> bool:
 	for mv in moves:
 		if mv == target:
@@ -312,11 +333,6 @@ func would_move_cause_check(from_row:int, from_col:int, to_row:int, to_col:int) 
 		board[from_row][rook_to_col] = null
 
 	return in_check
-
-# Backwards-compatible alias
-func _would_move_cause_check(from_row:int, from_col:int, to_row:int, to_col:int) -> bool:
-	return would_move_cause_check(from_row, from_col, to_row, to_col)
-
 
 func get_king_position(color_white: bool) -> Variant:
 	for r in ROWS:
@@ -463,3 +479,15 @@ func _is_attacked_by_king(kr:int, kc:int, attacker_color: bool) -> bool:
 				if p != null and p["type"] == KING and p["color_white"] == attacker_color:
 					return true
 	return false
+	
+
+# Convert FEN character to piece type constant
+func _fen_char_to_piece_type(ch: String):
+	match ch:
+		"p": return PAWN
+		"n": return KNIGHT
+		"b": return BISHOP
+		"r": return ROOK
+		"q": return QUEEN
+		"k": return KING
+		_: return null

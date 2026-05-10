@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c70x02secqvnn"]
+[gd_scene load_steps=13 format=3 uid="uid://c70x02secqvnn"]
 
 [ext_resource type="Script" uid="uid://dgvxhmqkkhahq" path="res://UI/scripts/menu.gd" id="1_qmqfe"]
 [ext_resource type="Texture2D" uid="uid://dfuccucvbo681" path="res://Assets/Images/Pawn_Queen_Minimalist.jpg" id="2_e05sn"]
@@ -36,6 +36,8 @@ hue_variation_min = 0.28999996
 hue_variation_max = 0.28999996
 turbulence_noise_speed = Vector3(4, 0, 0)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_dhncy"]
+
 [node name="Menu" type="Control"]
 layout_mode = 3
 anchors_preset = 0
@@ -44,7 +46,7 @@ offset_bottom = 40.0
 script = ExtResource("1_qmqfe")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture_filter = 4
+texture_filter = 2
 texture_repeat = 1
 position = Vector2(577.00006, 323.00003)
 scale = Vector2(1.7965571, 1.788889)
@@ -79,7 +81,24 @@ offset_top = 239.0
 offset_right = 1151.0
 offset_bottom = 643.0
 
-[node name="NewGameBtn" type="Button" parent="VBoxContainer"]
+[node name="SingleGameBtn" type="Button" parent="VBoxContainer"]
+texture_filter = 2
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_kfjwn")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/focus = SubResource("StyleBoxEmpty_dhncy")
+action_mode = 0
+text = "Single Player"
+icon = ExtResource("4_dte3n")
+flat = true
+alignment = 0
+expand_icon = true
+
+[node name="MultiplayerGameBtn2" type="Button" parent="VBoxContainer"]
+texture_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
 theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
@@ -87,7 +106,22 @@ theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_kfjwn")
 theme_override_font_sizes/font_size = 30
 action_mode = 0
-text = "Single Player"
+text = "Multiplayer"
+icon = ExtResource("4_dte3n")
+flat = true
+alignment = 0
+expand_icon = true
+
+[node name="TrainingGameBtn3" type="Button" parent="VBoxContainer"]
+texture_filter = 2
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22745098, 0.18039216, 0.22352941, 1)
+theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_kfjwn")
+theme_override_font_sizes/font_size = 30
+action_mode = 0
+text = "Training"
 icon = ExtResource("4_dte3n")
 flat = true
 alignment = 0
@@ -106,4 +140,44 @@ parameters/looping = true
 [node name="Click" type="AudioStreamPlayer2D" parent="MenuMusic"]
 stream = ExtResource("7_dte3n")
 
-[connection signal="pressed" from="VBoxContainer/NewGameBtn" to="." method="_on_new_game_btn_pressed"]
+[node name="MultiplayerPanel" type="Control" parent="."]
+visible = false
+anchors_preset = 0
+offset_left = 704.0
+offset_top = 236.0
+offset_right = 1004.0
+offset_bottom = 336.0
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="MultiplayerPanel"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 100.0
+alignment = 1
+
+[node name="CreateGame" type="Button" parent="MultiplayerPanel/VBoxContainer2"]
+layout_mode = 2
+text = "Create Game"
+
+[node name="JoinGame" type="Button" parent="MultiplayerPanel/VBoxContainer2"]
+layout_mode = 2
+text = "Join Game"
+
+[node name="LobbyCodeLabel" type="Label" parent="MultiplayerPanel"]
+layout_mode = 0
+offset_top = 80.0
+offset_right = 200.0
+offset_bottom = 103.0
+
+[node name="CodeInput" type="LineEdit" parent="MultiplayerPanel"]
+visible = false
+layout_mode = 0
+offset_top = -25.0
+offset_right = 200.0
+offset_bottom = 25.0
+placeholder_text = "Please Enter Lobby Code"
+alignment = 1
+
+[connection signal="pressed" from="VBoxContainer/SingleGameBtn" to="." method="_on_new_game_btn_pressed"]
+[connection signal="pressed" from="VBoxContainer/MultiplayerGameBtn2" to="." method="_on_multiplayer_pressed"]
+[connection signal="pressed" from="MultiplayerPanel/VBoxContainer2/CreateGame" to="." method="_on_create_game_pressed"]
+[connection signal="pressed" from="MultiplayerPanel/VBoxContainer2/JoinGame" to="." method="_on_join_game_pressed"]

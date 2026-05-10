@@ -30,10 +30,11 @@ const COLS := 8
 @onready var game_over: Control = $"../UI/GameOver"
 @onready var turn_light: Node2D = $"../UI/TurnLight"
 @onready var promotion_panel: Control = $"../UI/PromotionPanel"
-@onready var promo_queen_btn: Button = $"../UI/PromotionPanel/HBoxContainer/QueenBtn"
-@onready var promo_rook_btn: Button = $"../UI/PromotionPanel/HBoxContainer/RookBtn"
-@onready var promo_bishop_btn: Button = $"../UI/PromotionPanel/HBoxContainer/BishopBtn"
-@onready var promo_knight_btn: Button = $"../UI/PromotionPanel/HBoxContainer/KnightBtn"
+@onready var promo_queen_btn: Button = $"../UI/PromotionPanel/VBoxContainer/QueenBtn"
+@onready var promo_rook_btn: Button = $"../UI/PromotionPanel/VBoxContainer/RookBtn"
+@onready var promo_bishop_btn: Button = $"../UI/PromotionPanel/VBoxContainer/BishopBtn"
+@onready var promo_knight_btn: Button = $"../UI/PromotionPanel/VBoxContainer/KnightBtn"
+@onready var message_node: Label = $"../UI/GameOver/VBoxContainer/ColorRect/Message"
 
 # visual node mirror of the logical board
 var node_board: Array = []
@@ -70,6 +71,7 @@ var is_multiplayer: bool = false
 var my_color: bool = true
 var waiting_for_move: bool = false
 
+# Board Actions
 func _ready():
 	_setup_game_state()
 	_init_node_board_array()
@@ -79,10 +81,20 @@ func _ready():
 	hide_promotion_panel()
 	print_board_state()
 	satie.play()
+	
+	if GameData.is_multiplayer:
+		is_multiplayer = true
+		my_color = GameData.player_color
+	else:
+		is_multiplayer = false
+		
+	if NetworkManager.my_color != null:
+		NetworkManager.move_received.connect(_on_network_move_received)
+		NetworkManager.game_over.connect(_on_network_game_over)
 
 func _setup_game_state() -> void:
 	game_state = GameState.new()
-	game_state._init_board_from_startpos()
+	game_state.set_from_fen("8/8/7k/8/3N2P1/8/4K2P/8 w - - 0 1")
 	current_turn = game_state.current_turn
 
 func _init_node_board_array() -> void:
@@ -193,11 +205,10 @@ func _unhandled_input(ev):
 	if is_multiplayer and current_turn != my_color:
 		return
 
-	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT or ev is InputEventScreenTouch:
 		var cell = tile_layer.local_to_map(get_global_mouse_position())
 		var col = int(cell.x)
 		var row = int(cell.y)
-
 		if col >= 0 and col < COLS and row >= 0 and row < ROWS:
 			on_board_click(row, col)
 
@@ -241,7 +252,7 @@ func perform_move(piece: Node, to_r:int, to_c:int) -> void:
 	var from_c = int(from.y)
 
 	# detect promotion before applying move
-	if _is_promotion_move(piece, to_r):
+	if game_state._is_promotion_move(piece, to_r):
 		promotion_active = true
 		promotion_from_pos = Vector2i(from_r, from_c)
 		promotion_to_pos = Vector2i(to_r, to_c)
@@ -344,17 +355,6 @@ func _apply_last_move_visuals(moving_node: Node) -> void:
 		moving_node.grid_pos = Vector2i(to_r, to_c)
 		moving_node.has_moved = true
 
-func _is_promotion_move(piece: Node, to_r:int) -> bool:
-	if piece == null:
-		return false
-	if piece.piece_type != PAWN:
-		return false
-	if piece.color_white and to_r == ROWS - 1:
-		return true
-	if not piece.color_white and to_r == 0:
-		return true
-	return false
-
 func _in_bounds(r:int, c:int) -> bool:
 	return r >= 0 and r < ROWS and c >= 0 and c < COLS
 
@@ -409,12 +409,12 @@ func clear_highlights() -> void:
 		_recycle_highlight_dot(dot)
 	_active_highlights.clear()
 
+# UI Actions
 func show_game_over(message: String) -> void:
 	if not game_over:
 		return
 	game_over.visible = true
-	var msg_node = game_over.get_node("VBoxContainer/Message") as Label
-	msg_node.text = message
+	message_node.text = message
 	clear_highlights()
 	hide_promotion_panel()
 
@@ -441,10 +441,11 @@ func restart_game() -> void:
 	_spawn_visual_board_from_state()
 	print_board_state()
 	
-	turn_light.toggle_color()
+	#turn_light.toggle_color()
 	satie.play()
 
 func go_to_main_menu() -> void:
+	GameData.is_multiplayer = false 
 	get_tree().change_scene_to_file("res://UI/menu.tscn")
 
 func _on_rematch_pressed() -> void:
@@ -456,7 +457,8 @@ func _on_main_menu_pressed() -> void:
 func show_promotion_panel(is_white: bool) -> void:
 	if not promotion_panel:
 		return
-
+		
+	promotion_panel.position = grid_to_world(int(promotion_to_pos.x / 2), int(promotion_to_pos.y) - 1)
 	promotion_panel.visible = true
 	promo_queen_btn.icon = _texture_for_piece(QUEEN, is_white)
 	promo_rook_btn.icon = _texture_for_piece(ROOK, is_white)
@@ -484,7 +486,6 @@ func _on_promo_choice(new_type: int) -> void:
 		return
 
 	hide_promotion_panel()
-
 	var from_r = int(promotion_from_pos.x)
 	var from_c = int(promotion_from_pos.y)
 	var to_r = int(promotion_to_pos.x)
@@ -504,11 +505,23 @@ func _on_promo_choice(new_type: int) -> void:
 			promotion_from_pos = Vector2i(-1, -1)
 			promotion_to_pos = Vector2i(-1, -1)
 
+# Network Actions
 func _send_move_to_server(from_r:int, from_c:int, to_r:int, to_c:int, promotion_type: Variant) -> void:
-	pass
+	NetworkManager.send_move(from_r, from_c, to_r, to_c, promotion_type)
+	waiting_for_move = true
 
 func apply_remote_move(from_r:int, from_c:int, to_r:int, to_c:int, promotion_type: Variant = null) -> void:
 	if _commit_game_move(from_r, from_c, to_r, to_c, promotion_type):
 		pass
 	else:
 		push_error("Failed to apply remote move (%d,%d)->(%d,%d) promo=%s" % [from_r, from_c, to_r, to_c, str(promotion_type)])
+
+func _on_network_move_received(from_r, from_c, to_r, to_c, promotion_type):
+	_commit_game_move(from_r, from_c, to_r, to_c, promotion_type)
+
+func _on_network_game_over(winner):
+	if winner == null:
+		show_game_over("Stalemate — Draw")
+	else:
+		var winner_name = "White" if winner else "Black"
+		show_game_over("Checkmate — %s wins" % winner_name)
