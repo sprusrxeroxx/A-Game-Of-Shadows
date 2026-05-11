@@ -23,5 +23,5 @@ Ever wanted to play chess without the stress of the clock, or beating an opponen
 - Preferences
 - Bots
 - Tutorials
-- More Multiplayer Mods
+- More Multiplayer Modes
 - More Classical Music
