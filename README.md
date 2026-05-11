@@ -24,3 +24,4 @@ Ever wanted to play chess without the stress of the clock, or beating an opponen
 - Bots
 - Tutorials
 - More Multiplayer Modes
+- More Classical Music
